@@ -1,0 +1,15 @@
+main{
+	int i, j;
+	int p[10];
+	i = 4 XOR 4;
+	do{
+		p[i] = i;
+		i++;
+	}while(i < 10);
+	j = 0;
+	do{
+	 write p[j];
+	 j++;
+	}while(j < 10);
+}
+/*输出0~9*/

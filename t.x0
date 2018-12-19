@@ -1,0 +1,26 @@
+main{
+	int a, b;
+	int c;
+	int d, r;
+	char x;
+	char d;
+	a = 10;
+	b = 20;
+	if(a > b)
+		{
+			write a;
+			write 98 - 10;
+		}
+	else	
+		write b;
+	c = 2 * 7;
+	write 1 + 1;
+	d = 100;
+	if(d < 200)
+		write d;
+	write c;
+	x = 110;
+	write x;
+}	
+
+		
