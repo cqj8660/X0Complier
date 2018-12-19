@@ -26,6 +26,8 @@ repeatsym	   "repeat"
 untilsym	   "until"
 
 %%
+"++"			   {return SELFADD;}
+"--"			   {return SELFMIUNS;}
 "/*"				{comment(); }
 "*"				   return *yytext;
 "/"				   return *yytext;
