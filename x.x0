@@ -1,15 +1,26 @@
 main{
-	int i, j;
-	int p[10];
-	i = 4 XOR 4;
-	do{
-		p[i] = i;
-		i++;
-	}while(i < 10);
-	j = 0;
-	do{
-	 write p[j];
-	 j++;
-	}while(j < 10);
+bool a;
+bool b;
+int x;
+int y;
+a = true;
+b = false;
+write (a and b);
+write (a or b);
+write (not a);
+write (true or (not a) and (not b));
+read x;
+read y;
+a = x>y;
+if(a){
+  write x;
+  b = false;
 }
-/*输出0~9*/
+else{
+  write y;
+  b = true;
+}
+write(b);
+
+}
+/* 与或非运算符可以根据自己定义的实际情况调整 */

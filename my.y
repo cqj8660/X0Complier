@@ -110,6 +110,7 @@
 %token READSYM THENSYM VARSYM WHILESYM WRITESYM ELSESYM DOSYM UNTILSYM
 
 %token MAINSYM INTSYM CHARSYM NUM NEQ EQL LEQ GEQ XORSYM REPEATSYM BOOLSYM
+%token ANDSYM ORSYM NOTSYM
 
 %left '+''-'
 %left '*''/' 
@@ -452,7 +453,7 @@ writestm: WRITESYM var
                        else if(table[$2].kind == variable)
                           {
                             gen(lod, lev - table[$2].level, table[$2].adr);
-                            if(table[$2].idtype == intype)
+                            if(table[$2].idtype != chartype)
                               gen(opr, 0, 14);
                               else
                                 gen(opr, 0, 17);
@@ -470,7 +471,7 @@ writestm: WRITESYM var
                	gen(opr, 0, 15);
                }';'
 
-          |WRITESYM ident '[' expression ']' ';'
+          |WRITESYM var '[' expression ']' ';'
           {
               if ($2 == 0)
                        yyerror("Symbol does not exist");
@@ -480,7 +481,7 @@ writestm: WRITESYM var
                        else
                           {
                             gen(loa, lev - table[$2].level, table[$2].adr);
-                            if(table[$2].idtype == intype)
+                            if(table[$2].idtype != chartype)
                               gen(opr, 0, 14);
                             else
                               gen(opr, 0, 17);
@@ -492,9 +493,15 @@ writestm: WRITESYM var
 
 
 /* 条件表达式 */
-condition: ODDSYM expression 
+condition: 
+          |factor
+          |ODDSYM expression 
                {
                	gen(opr, 0, 6);
+               }
+          | NOTSYM expression
+               {
+                gen(opr, 0, 20);
                }
           | expression EQL expression 
                {
@@ -519,6 +526,14 @@ condition: ODDSYM expression
           | expression GEQ expression 
                {
                	gen(opr, 0, 11);
+               }
+          | expression ANDSYM expression
+               {
+                gen(opr, 0, 21);//取and操作
+               }
+          | expression ORSYM expression
+               {
+                gen(opr, 0, 22);//取and操作
                }
           ;
 /* 表达式 */
@@ -942,6 +957,17 @@ void interpret()
 						t = t - 1;
 						s[t] = s[t] ^ s[t + 1];
 						break;
+          case 20:/* 栈顶的值取not */
+            s[t] = !s[t];
+            break;
+          case 21:/* 次栈顶项and栈顶项 */
+            t = t - 1;
+            s[t] = s[t] && s[t + 1];
+            break;
+          case 22:/* 次栈顶项or栈顶项 */
+            t = t - 1;
+            s[t] = s[t] || s[t + 1];
+            break;
 				}
 				break;
 			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */

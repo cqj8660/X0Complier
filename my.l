@@ -49,6 +49,7 @@ untilsym	   "until"
 {mainsym}		   {return(MAINSYM);}
 {intsym}		   {return(INTSYM);}
 {charsym}		   {return(CHARSYM);}
+{boolsym}		   {return(BOOLSYM);}
 {ifsym}			   {return(IFSYM);}
 {elsesym}		   {return(ELSESYM);}
 {thensym} 		   {return(THENSYM);}
@@ -61,6 +62,11 @@ untilsym	   "until"
 {callsym}		   {return(CALLSYM);}
 {constsym}		   {return(CONSTSYM);}
 {procsym}		   {return(PROCSYM);}
+"and"			   {return(ANDSYM);}
+"or"			   {return(ORSYM);}
+"not"			   {return(NOTSYM);}
+"true"			   {yylval.number=1;return(NUMBER);}	
+"false"			   {yylval.number=0;return(NUMBER);}
 "ODD"			   {return(ODDSYM);}
 "XOR"			   {return(XORSYM);}
 "var"			   {return(VARSYM);}
