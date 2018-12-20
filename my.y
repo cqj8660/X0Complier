@@ -629,44 +629,7 @@ expression: '+' term
 
           }
           | condition{puts("看我!! 我是伪装成表达式的条件语句");};
-          | var SELFADD {
-          if (table[$1].kind == variable)
-          {
-            gen(lod, lev - table[$1].level, table[$1].adr);
-            gen(lit, 0, 1);
-            gen(opr, 0, 2);
-            gen(sto, lev - table[$1].level, table[$1].adr);
-            gen(hod, 0, 0);
-          }
-          else if(table[$1].kind == array)
-          {
-            gen(cpy, 0, 0);
-            gen(loa, lev - table[$1].level, table[$1].adr);
-            gen(lit, 0, 1);
-            gen(opr, 0, 2);
-            gen(sta, lev - table[$1].level, table[$1].adr);
-            gen(hod, 0, 0);
-          }
-          }
-          | var SELFMIUNS{
-          if (table[$1].kind == variable)
-          {
-            gen(lod, lev - table[$1].level, table[$1].adr);
-            gen(lit, 0, 1);
-            gen(opr, 0, 3);
-            gen(sto, lev - table[$1].level, table[$1].adr);
-            gen(hod, 0, 0);
-          }
-          else if(table[$1].kind == array)
-          {
-            gen(cpy, 0, 0);
-            gen(loa, lev - table[$1].level, table[$1].adr);
-            gen(lit, 0, 1);
-            gen(opr, 0, 3);
-            gen(sta, lev - table[$1].level, table[$1].adr);
-            gen(hod, 0, 0);
-          }
-          }
+          
           ;
 
 /* 项 */
@@ -713,6 +676,44 @@ factor: var
                 gen(lit, 0, $1);
                }
           | '(' expression ')';
+          | var SELFADD {
+          if (table[$1].kind == variable)
+          {
+            gen(lod, lev - table[$1].level, table[$1].adr);
+            gen(lit, 0, 1);
+            gen(opr, 0, 2);
+            gen(sto, lev - table[$1].level, table[$1].adr);
+            gen(hod, 0, 0);
+          }
+          else if(table[$1].kind == array)
+          {
+            gen(cpy, 0, 0);
+            gen(loa, lev - table[$1].level, table[$1].adr);
+            gen(lit, 0, 1);
+            gen(opr, 0, 2);
+            gen(sta, lev - table[$1].level, table[$1].adr);
+            gen(hod, 0, 0);
+          }
+          }
+          | var SELFMIUNS{
+          if (table[$1].kind == variable)
+          {
+            gen(lod, lev - table[$1].level, table[$1].adr);
+            gen(lit, 0, 1);
+            gen(opr, 0, 3);
+            gen(sto, lev - table[$1].level, table[$1].adr);
+            gen(hod, 0, 0);
+          }
+          else if(table[$1].kind == array)
+          {
+            gen(cpy, 0, 0);
+            gen(loa, lev - table[$1].level, table[$1].adr);
+            gen(lit, 0, 1);
+            gen(opr, 0, 3);
+            gen(sta, lev - table[$1].level, table[$1].adr);
+            gen(hod, 0, 0);
+          }
+          }
 
 ident: IDENT 
                {
@@ -1096,7 +1097,7 @@ void interpret()
 
       case hod:
         t = t + 1;//将上次的值滞留在栈顶
-
+        break;
       case cpy://将栈顶的值复制一份
         s[t + 1] = s[t];
         t = t + 1;
