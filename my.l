@@ -24,7 +24,9 @@ constsym	   "const"
 procsym		   "procedure"
 repeatsym	   "repeat"
 untilsym	   "until"
-
+forsym	       "for"
+continuesym    "continue"
+breaksym	   "break"
 %%
 "++"			   {return SELFADD;}
 "--"			   {return SELFMIUNS;}
@@ -58,7 +60,10 @@ untilsym	   "until"
 {whilesym} 		   {return(WHILESYM);}
 {repeatsym}		   {return(REPEATSYM);}
 {untilsym}		   {return(UNTILSYM);}
-{writesym}		   {return(WRITESYM);}
+{forsym}		   {return(FORSYM);}
+{continuesym}	   {return(CONTINUESYM);}
+{breaksym}		   {return(BREAKSYM);}
+{writesym}		   {return(WRITESYM);} 
 {readsym}		   {return(READSYM);}
 {dosym}		  	   {return(DOSYM);}
 {callsym}		   {return(CALLSYM);}

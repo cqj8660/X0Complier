@@ -35,7 +35,6 @@
       int level;
       int adr;      /* 地址，仅const不使用 */
       int size;
-
       bool isarray;
       int arraylist[arraysize];
       /* 存储数组的值 arraysize */
@@ -71,14 +70,14 @@
     int proctable[3]; //嵌套过程索引表
     char id[al];
     int num;
-  bool listswitch;   /* 显示虚拟机代码与否 */
-  bool tableswitch;  /* 显示符号表与否 */
+    bool listswitch;   /* 显示虚拟机代码与否 */
+    bool tableswitch;  /* 显示符号表与否 */
 
-  FILE* fin;      /* 输入源文件 */
-  FILE* ftable;   /* 输出符号表 */
-  FILE* fcode;    /* 输出虚拟机代码 */
-  FILE* foutput;  /* 输出出错示意（如有错） */
-  FILE* fresult;  /* 输出执行结果 */
+    FILE* fin;      /* 输入源文件 */
+    FILE* ftable;   /* 输出符号表 */
+    FILE* fcode;    /* 输出虚拟机代码 */
+    FILE* foutput;  /* 输出出错示意（如有错） */
+    FILE* fresult;  /* 输出执行结果 */
     char fname[al];
     int err;
     extern int line;
@@ -91,12 +90,19 @@
     void listall();
     void displaytable();
     int base(int l, int* s, int b);
-
+    void enterbreak(int exit);//填写break出口
+    void entercond(int exit);//填写continue出口
     char symbol[20];//当前的ident的类型 是数组还是单个变量
     int nowlen;//如果是数组的话 访问的事第几个单元
     char category[10];//判断当前id是否是整形还是字符类型还是布尔类型
     int dx;//记录符号表的个数 而不是地址空间的个数即数组为1个变量
     int extralen;//记录由于存在数组而多出来的需要分配的个数
+
+    bool loopstate = 0;//记录是否进入loop状态
+    int contnum;
+    int breaknum;
+    int breaklist[al];//需要填写的break出口列表
+    int contlist[al];
 
 
 %}
@@ -110,14 +116,14 @@
 %token READSYM THENSYM VARSYM WHILESYM WRITESYM ELSESYM DOSYM UNTILSYM
 
 %token MAINSYM INTSYM CHARSYM NUM NEQ EQL LEQ GEQ XORSYM REPEATSYM BOOLSYM
-%token ANDSYM ORSYM NOTSYM SELFMIUNS SELFADD
+%token ANDSYM ORSYM NOTSYM SELFMIUNS SELFADD FORSYM CONTINUESYM BREAKSYM
 
 %left '+''-'
 %left '*''/' 
 %token <ident> IDENT
 %token <number> NUMBER
 
-%type <number> ident var
+%type <number> ident var forexpr
 %type <number> vardecl varlist vardef declaration_list
 %type <number> get_table_addr get_code_addr
 %%
@@ -269,22 +275,73 @@ statement: assignmentstm
           | selfplusminus
           | repeatstm
           | dowhilestm
+          | forloopstm
+          | continuestm
+          | breakstm
           ;
+continuestm:
+        CONTINUESYM get_code_addr ';'{
+          gen(jmp, 0, 0);
+          contlist[contnum++] = $2;
+        }
+breakstm:
+        BREAKSYM get_code_addr ';'{
+          gen(jmp, 0, 0);
+          breaklist[breaknum++] = $2;
+        }
+/*  for loop 循环语句 */   
+forloopstm:
+         FORSYM '(' forexpr ';' get_code_addr
+         forexpr 
+         {
+          /*用于判断是否是无条件限制循环 仅在for的语句2中会使用*/
+          if($6 == 1)
+            gen(lit, 0, 1);
+        }
+         ';' get_code_addr
+         {
+          loopstate = 1;
+          gen(jpe, 0, 0);
+          gen(jmp, 0, 0);
+         } get_code_addr forexpr ')'
+         {
+          gen(jmp, 0, $5);
+         } 
+         get_code_addr
+         statement{
+          gen(jmp, 0, $11);
+          code[$9].a = $15;
+          code[$9 + 1].a = cx;
+          enterbreak(cx);
+          entercond($11);
+          loopstate = 0;
+         }
+         ;
+
+forexpr:
+        {$$ = 1;/*用于判断是否是无条件限制循环 仅在for的语句2中会使用*/}|expression{
+  {$$ = 0;/*用于判断是否是无条件限制循环 仅在for的语句2中会使用*/}
+}
+      ;
 /*  do while 循环语句 */   
 dowhilestm:
       DOSYM get_code_addr statement get_code_addr
-      WHILESYM '(' condition 
+      WHILESYM '(' condition get_code_addr
       {
         gen(jpe, 0, $2);
+        entercond($4);
+        enterbreak($8);
       }
       ')' ';'
       ;      
 /*  repeat until 循环语句 */   
 repeatstm:
       REPEATSYM get_code_addr statement get_code_addr
-      UNTILSYM '(' condition 
+      UNTILSYM '(' condition get_code_addr
       {
         gen(jpc, 0, $2);
+        entercond($4);
+        enterbreak($8);
       }
       ')' ';'
       ;
@@ -400,6 +457,8 @@ whilestm: WHILESYM get_code_addr '(' condition ')' get_code_addr
                {
                 gen(jmp, 0, $2);
                 code[$6].a = cx;
+                enterbreak(cx);
+                entercond($2);
                }
           ;
 
@@ -473,7 +532,6 @@ writestm: WRITESYM var
 
           |WRITESYM ident '[' expression ']' ';'
           {
-            printf("zheshizmhuis\n");
               if ($2 == 0)
                        yyerror("Symbol does not exist");
               else{
@@ -714,6 +772,25 @@ void init()
     num = 0;
     err = 0;
 }
+
+/* 填写所有的break出口 */
+void enterbreak(int exit)
+{
+  int i = 0;
+  for(i = 0; i < breaknum; i++)
+    code[breaklist[i]].a = exit;
+  breaknum = 0;
+}
+
+/* 填写所有的continue出口 */
+void entercond(int exit)
+{
+  int i = 0;
+  for(i = 0; i < contnum; i++)
+    code[contlist[i]].a = exit;
+  contnum = 0;
+}
+
 
 /* 在符号表中加入一项 */
 void enter(enum vartype T, enum object k, int arraylen)

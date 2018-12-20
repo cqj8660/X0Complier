@@ -1,7 +1,7 @@
 main
 {
 	int a;
-	a = 5;
-	write(a);
+	a = 1;
+	write a > 1;
 
 }
