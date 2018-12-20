@@ -1,26 +1,26 @@
 main{
-	const dd = 97, ff = 5;
-	int i, j;
-	bool a, b;
-	char c;
-	a = 1;
-	b = 1;
-	if(a and b)
-		{
-			a = 1;
-			c = dd;
-			write c;
-		}
-	else
-		b = 1;
-	if(a == false)
-		write a;
-	else{
-		i = 10;
-		repeat{
-			write i;
-			i--;
-		}until(i == 0);
-	}
+bool a;
+bool b;
+int x;
+int y;
+a = true;
+b = false;
+write (a and b);
+write (a or b);
+write (not a);
+write (true or (not a) and (not b));
+read x;
+read y;
+a = x>y;
+if(a){
+  write x;
+  b = false;
+}
+else{
+  write y;
+  b = true;
+}
+write(b);
+
 }
 /* 与或非运算符可以根据自己定义的实际情况调整 */

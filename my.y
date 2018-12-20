@@ -13,7 +13,7 @@
     #define levmax 3  //嵌套深度
     #define cxmax 200  //最多的pcode条数
     #define stacksize 500 //栈元素上界
-
+    #define arraysize 10000
 
     enum object{
       constant,
@@ -37,8 +37,8 @@
       int size;
 
       bool isarray;
-      int arraylist[txmax];
-      /* 存储数组的值 最大长度为txmax */
+      int arraylist[arraysize];
+      /* 存储数组的值 arraysize */
       int arraylen;/* 记录数组长度 */
     };
 
@@ -832,7 +832,7 @@ if (tableswitch)    /* 输出符号表 */
           break;
         case variable:
           printf("    %d var   %s ", i, table[i].name);
-          printf("lev=%d addr=%d type=%d \n", table[i].level,  table[i].idtype, table[i].adr);
+          printf("lev=%d addr=%d type=%d \n", table[i].level, table[i].adr,  table[i].idtype);
           fprintf(ftable, "    %d var   %s ", i, table[i].name);
           fprintf(ftable, "lev=%d addr=%d\n", table[i].level, table[i].adr);
           break;
@@ -1106,7 +1106,7 @@ int main(void)
   }
   
   fclose(ftable);
-    fclose(foutput);
+  fclose(foutput);
   fclose(fin);
   return 0;
 }
