@@ -1,2 +1,6 @@
-    1 var   i lev=0 addr=3
+    1 var   p lev=0 addr=3
+    2 var   i lev=0 addr=103
+    3 var   j lev=0 addr=104
+    4 var   a lev=0 addr=105
+    5 var   b lev=0 addr=106
 

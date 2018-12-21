@@ -1,10 +1,15 @@
-main{
-	int a[10];
-	int i;
-	a[1] = 30;
-	i = 10 + a[1]++;
-	write i;
-	write a[1];
 
+main{
+int p;
+procedure add
+{
+  int a, b;
+  a = 10;
+  b = 2;
+  write a;
+  write b;
+  
 }
-/*输出0~9;可根据语法定义将自增/自减符号移动至变量后面*/
+call add;
+}
+/*若读入两个小于10的数，输出这两个数的乘积，否则，输出>=10的值。*/

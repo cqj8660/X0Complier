@@ -27,7 +27,9 @@ untilsym	   "until"
 forsym	       "for"
 continuesym    "continue"
 breaksym	   "break"
+exitsym	       "exit"
 %%
+"]["			   {return(DIM2);}
 "++"			   {return SELFADD;}
 "--"			   {return SELFMIUNS;}
 "/*"				{comment(); }
@@ -63,6 +65,7 @@ breaksym	   "break"
 {forsym}		   {return(FORSYM);}
 {continuesym}	   {return(CONTINUESYM);}
 {breaksym}		   {return(BREAKSYM);}
+{exitsym}  		   {return(EXITSYM);}
 {writesym}		   {return(WRITESYM);} 
 {readsym}		   {return(READSYM);}
 {dosym}		  	   {return(DOSYM);}
@@ -83,7 +86,7 @@ breaksym	   "break"
 "!="		  	   {return(NEQ);}
 {ID}   		   	   {yylval.ident=(char *)malloc(strlen(yytext)+1);
                                  strcpy(yylval.ident,yytext);return(IDENT);}
-\n                 /* ignore end of line */;
+\n                 {/* ignore end of line */line++;}
 [ \t]+             /* ignore whitespace */;
 %%
 void redirectInput(FILE *input)

@@ -12,7 +12,7 @@
     #define amax 2048 //地址上界
     #define levmax 3  //嵌套深度
     #define cxmax 200  //最多的pcode条数
-    #define stacksize 500 //栈元素上界
+    #define stacksize 5000 //栈元素上界
     #define arraysize 10000
 
     enum object{
@@ -36,9 +36,11 @@
       int adr;      /* 地址，仅const不使用 */
       int size;
       bool isarray;
-      int arraylist[arraysize];
+      // int arraylist[arraysize];
       /* 存储数组的值 arraysize */
       int arraylen;/* 记录数组长度 */
+      int dim;
+      int lay[5];
     };
 
     struct tablestruct table[txmax]; //符号表
@@ -48,7 +50,7 @@
       sto,  cal,  ini,
       jmp,  jpc,  loa,
       sta,  hod,  cpy,
-      jpe
+      jpe,  ext,  cla,
 
     };
 
@@ -80,10 +82,9 @@
     FILE* fresult;  /* 输出执行结果 */
     char fname[al];
     int err;
-    extern int line;
 
     void init();
-    void enter(enum vartype T, enum object k, int arraylen);
+    void enter(enum vartype T, enum object k, int arraylen, int dim, int lay[]);
     int position(char* s);
     void setdx(int n);
     void gen(enum fct x, int y, int z);
@@ -112,11 +113,12 @@
   int number;
 }
 
-%token BEGINSYM CALLSYM CONSTSYM DOSYM ENDSYM IFSYM ODDSYM PROCSYM
+%token BEGINSYM CALLSYM CONSTSYM DOSYM ENDSYM IFSYM ODDSYM PROCSYM EXITSYM
 %token READSYM THENSYM VARSYM WHILESYM WRITESYM ELSESYM DOSYM UNTILSYM
 
 %token MAINSYM INTSYM CHARSYM NUM NEQ EQL LEQ GEQ XORSYM REPEATSYM BOOLSYM
 %token ANDSYM ORSYM NOTSYM SELFMIUNS SELFADD FORSYM CONTINUESYM BREAKSYM
+%token DIM2
 
 %left '+''-'
 %left '*''/' 
@@ -140,7 +142,7 @@ block:         {
                 gen(jmp, 0 , 0);            /* 产生跳转指令，跳转位置未知暂时填0 */
                }
                get_table_addr               /* 记录本层标识符的初始位置 */
-               constdecl declaration_list
+               constdecl declaration_list procdecls
                {setdx($4 - extralen);/* 分配变量相对地址 */} 
                {
                 code[$<number>1].a = cx;    /* 把前面生成的跳转语句的跳转位置改成当前位置 */
@@ -155,7 +157,23 @@ block:         {
                 tx = proctable[px];
                }
           ;
+/*  过程声明 */
+procdecls: | {puts("---");}
+          procdecls procdecl procbody '}'
+           
+          ;
+/*  过程声明头部 */
+procdecl: inc_px PROCSYM IDENT  '{'
+               {                 
+                 strcpy(id, $3);
+                 enter(-1, procedure, 0, 0, NULL); 
+                 proctable[px] = tx;                
+               }
+          ;
 
+/*  过程声明主体 */
+procbody: inc_level block dec_level_px  
+          ;
 /*  常量声明 */
 constdecl: CONSTSYM constlist ';' 
           |
@@ -171,7 +189,7 @@ constdef: IDENT '=' NUMBER
                {
                 strcpy(id,$1);   
                 num = $3;
-                enter(intype, constant, 0);
+                enter(intype, constant, 0, 0, NULL);
               }
           ;
 declaration_list:
@@ -223,46 +241,44 @@ vardef: IDENT
                {
                 strcpy(id, $1);
                 if(category[0] == 'c')
-                  enter(chartype, variable, 0); 
+                  enter(chartype, variable, 0, 0, NULL); 
                 else if(category[0] == 'i')
-                  enter(intype, variable, 0); 
+                  enter(intype, variable, 0, 0, NULL); 
                 else
-                  enter(booltype, variable, 0);
+                  enter(booltype, variable, 0, 0, NULL);
                 $$ = 1;
                }
          | IDENT '[' NUMBER ']'
          {
                 strcpy(id, $1);
-
+                int temp[] = {$3};
                 if(category[0] == 'c')
-                  enter(chartype, array, $3); 
+                  enter(chartype, array, $3, 1, temp); 
                 else if(category[0] == 'i')
-                  enter(intype, array, $3); 
+                  enter(intype, array, $3, 1, temp); 
                 else
-                  enter(booltype, array, $3); 
+                  enter(booltype, array, $3, 1, temp); 
                 $$ = $3;
                 extralen += $3 - 1;
                 printf("我是数组定义%d over\n", $3);
                }
-          ;
-
-/*  过程声明 */
-procdecls: procdecls procdecl procbody 
-          |  
-          ;
-
-/*  过程声明头部 */
-procdecl: inc_px PROCSYM IDENT ';'
-               {                 
-                 strcpy(id, $3);
-                 enter(-1, procedure, 0); 
-                 proctable[px] = tx;                
+         | IDENT '[' NUMBER DIM2 NUMBER ']'
+         {
+                strcpy(id, $1);
+                int temp[] = {$3, $5};
+                if(category[0] == 'c')
+                  enter(chartype, array, $3 * $5, 2, temp); 
+                else if(category[0] == 'i')
+                  enter(intype, array, $3 * $5, 2, temp); 
+                else
+                  enter(booltype, array, $3 * $5, 2, temp); 
+                $$ = $3 * $5;
+                extralen += $3 * $5 - 1;
+                printf("我是数组定义%d over\n", $3);
                }
           ;
 
-/*  过程声明主体 */
-procbody: inc_level block dec_level_px ';' 
-          ;
+
 
 /*  语句 */
 statement: assignmentstm 
@@ -278,7 +294,13 @@ statement: assignmentstm
           | forloopstm
           | continuestm
           | breakstm
+          | exitstm
+
           ;
+exitstm:  EXITSYM ';'
+        {
+          gen(ext, 0, 0);
+        }
 continuestm:
         CONTINUESYM get_code_addr ';'{
           gen(jmp, 0, 0);
@@ -405,7 +427,7 @@ assignmentstm: var '=' expression ';'
           ;
 
 /*  调用语句 */
-callstm: CALLSYM ident
+callstm: CALLSYM ident ';'
              {
                  if ($2 == 0)
                        yyerror("call Symbol does not exist");
@@ -470,16 +492,14 @@ readstm: READSYM  readvarlist  ';'
 readvarlist: readvar | readvarlist ',' readvar 
           ;
 /* 读语句变量 */
-readvar: ident 
+readvar: var 
                {
                 gen(opr, 0, 16);
-                gen(sto, lev - table[$1].level, table[$1].adr);
+                if(table[$1].kind == variable) 
+                  gen(sto, lev - table[$1].level, table[$1].adr);
+                else
+                  gen(sta, lev - table[$1].level, table[$1].adr);
                }
-          |ident '[' expression ']'
-          {
-                gen(opr, 0, 16);
-                gen(sta, lev - table[$1].level, table[$1].adr);
-          }
           ;
 
 var: ident 
@@ -497,6 +517,14 @@ var: ident
                   symbol[0] = 'a';//当前符号是一个array
                   // gen(opr, 0, 16);
                   // gen(sto, lev - table[$1].level, table[$1].adr);
+               }
+    | ident '[' expression DIM2 expression ']'
+               {
+                  // printf("?????\n");
+                  $$ = $1;
+                  gen(lit, 0, table[$1].lay[1]);
+                  // printf("!!!\n");
+                  gen(cla, 0, 0);
                } 
     ;
           ;
@@ -518,10 +546,18 @@ writestm: WRITESYM var
                                 gen(opr, 0, 17);
                                 gen(opr, 0, 15);    
                           }
-                        else{//或者是常数
+                        else if (table[$2].kind == constant){//或者是常数
                                gen(lit, 0, table[$2].val);
                                gen(opr, 0, 14);
                                gen(opr, 0, 15);    
+                        }
+                        else{
+                            gen(loa, lev - table[$2].level, table[$2].adr);
+                            if(table[$2].idtype != chartype)
+                              gen(opr, 0, 14);
+                            else
+                              gen(opr, 0, 17);
+                            gen(opr, 0, 15);    
                         }
                     }
                 } ';'
@@ -529,25 +565,6 @@ writestm: WRITESYM var
                 gen(opr, 0, 14);
                 gen(opr, 0, 15);
                }';'
-
-          |WRITESYM ident '[' expression ']' ';'
-          {
-              if ($2 == 0)
-                       yyerror("Symbol does not exist");
-              else{
-                       if (table[$2].kind == procedure || table[$2].kind == constant)
-                           yyerror("Symbol should not be a array variable");
-                       else
-                          {
-                            gen(loa, lev - table[$2].level, table[$2].adr);
-                            if(table[$2].idtype != chartype)
-                              gen(opr, 0, 14);
-                            else
-                              gen(opr, 0, 17);
-                            gen(opr, 0, 15);    
-                          }
-              }
-          }
           ;
 
 
@@ -750,10 +767,10 @@ dec_level_px:
               }    
           ;
 
-
 ////////////////////////////////////////////////////////
 //程序部分
 %%
+extern int line;
 int yyerror(char *s)
 {
   err = err + 1;
@@ -794,8 +811,9 @@ void entercond(int exit)
 
 
 /* 在符号表中加入一项 */
-void enter(enum vartype T, enum object k, int arraylen)
+void enter(enum vartype T, enum object k, int arraylen, int dim, int lay[])
 {
+    int i;
   tx = tx + 1;
   strcpy(table[tx].name, id);
   table[tx].kind = k;
@@ -805,6 +823,12 @@ void enter(enum vartype T, enum object k, int arraylen)
       table[tx].level = lev;
       table[tx].idtype = T;
       table[tx].arraylen = arraylen;
+      for(i = 0; i < dim; i++)
+          {
+              table[tx].lay[i] = lay[i];
+              // printf("%d ", lay[i]);
+          }
+      table[tx].dim = dim;
       break;
     case constant:  /* 常量 */      
       table[tx].val = num; /* 登记常数的值 */
@@ -872,7 +896,7 @@ void listall()
   char name[][5]=
   {
     {"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"int"},{"jmp"},{"jpc"},{"loa"},{"sta"},{"hod"},
-    {"cpy"},{"jpe"}
+    {"cpy"},{"jpe"},{"ext"},{"cla"}
   };
   if (listswitch)
   {
@@ -1101,6 +1125,14 @@ void interpret()
       case cpy://将栈顶的值复制一份
         s[t + 1] = s[t];
         t = t + 1;
+        break;
+      case ext:
+        p = 0;
+        break;
+      case cla:
+        t -= 2;
+        s[t] = s[t] * s[t + 2] + s[t + 1];
+        break;
 
     }
   } while (p != 0);
