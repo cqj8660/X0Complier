@@ -209,13 +209,11 @@ declaration_list:
 vardecl: type varlist ';'
                {
                 $$ = $2;         /* 传递变量声明的个数 */
-                dx = $2;
 
                }
           |
               {
                 $$ = 0;          /* 没有变量声明 */
-                dx = 0;
               } 
           ;
 type:
@@ -232,12 +230,10 @@ type:
 varlist: vardef 
                {
                 $$ = $1;
-                dx = $1;
                }
           | varlist ',' vardef 
                {
                 $$ = $1 + $3;  /* 变量声明的个数相加 */
-                dx = $1 + $3;
                }
           ;
          

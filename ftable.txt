@@ -1,13 +1,19 @@
     1 var   p lev=0 addr=3
-    2 var   a lev=0 addr=4
-    3 var   ss lev=0 addr=104
-    4 proc  add lev=0 addr=2 size=6
-    5 var   a lev=1 addr=3
-    6 var   b lev=1 addr=4
-    7 var   c lev=1 addr=5
+    2 var   i lev=0 addr=103
+    3 var   j lev=0 addr=104
+    4 var   a lev=0 addr=105
+    5 var   b lev=0 addr=106
+    6 proc  add lev=0 addr=2 size=8
+    7 var   x lev=1 addr=3
+    8 var   y lev=1 addr=4
+    9 var   s lev=1 addr=5
+    10 var   r lev=1 addr=6
+    11 var   s lev=1 addr=7
 
     1 var   p lev=0 addr=3
-    2 var   a lev=0 addr=4
-    3 var   ss lev=0 addr=104
-    4 proc  add lev=0 addr=2 size=6
+    2 var   i lev=0 addr=103
+    3 var   j lev=0 addr=104
+    4 var   a lev=0 addr=105
+    5 var   b lev=0 addr=106
+    6 proc  add lev=0 addr=2 size=8
 
