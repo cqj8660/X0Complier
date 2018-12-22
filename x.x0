@@ -1,15 +1,25 @@
 
 main{
-int p;
+int p, a[100];
+char ss;
 procedure add
 {
   int a, b;
+  char c;
   a = 10;
   b = 2;
+  c = a * a;
+  write c;
   write a;
   write b;
   
 }
+p = 100;
 call add;
+write p;
+a[1] = 1 XOR 2;
+if(ODD 10)
+	write a[1];
+else
+	write 199;
 }
-/*若读入两个小于10的数，输出这两个数的乘积，否则，输出>=10的值。*/

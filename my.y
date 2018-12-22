@@ -142,8 +142,13 @@ block:         {
                 gen(jmp, 0 , 0);            /* 产生跳转指令，跳转位置未知暂时填0 */
                }
                get_table_addr               /* 记录本层标识符的初始位置 */
-               constdecl declaration_list procdecls
-               {setdx($4 - extralen);/* 分配变量相对地址 */} 
+               constdecl declaration_list
+               {
+                 printf("变量声明完成%d\n",$4 - extralen);
+                 setdx($4 - extralen);
+                 extralen=0;/* 分配变量相对地址 */
+               }  
+               procdecls
                {
                 code[$<number>1].a = cx;    /* 把前面生成的跳转语句的跳转位置改成当前位置 */
                 table[$2].adr = cx;         /* 记录当前过程代码地址 */
