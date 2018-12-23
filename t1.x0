@@ -1,0 +1,12 @@
+main
+{
+	/*求余运算符%、异或运算符%、ODD与自增自减的实现*/
+	int a, b;
+	read a;
+	read b;
+	if(ODD (a % b))
+		write 1;
+	else
+		write 0;
+}
+/*如果a能整除b 输出1 否则输出0*/

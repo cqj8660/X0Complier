@@ -51,7 +51,7 @@
       jmp,  jpc,  loa,
       sta,  hod,  cpy,
       jpe,  ext,  cla,
-
+      tss,  tsl
     };
 
     struct instruction
@@ -80,6 +80,7 @@
     FILE* fcode;    /* 输出虚拟机代码 */
     FILE* foutput;  /* 输出出错示意（如有错） */
     FILE* fresult;  /* 输出执行结果 */
+    FILE* fstack;   /* 输出每一步栈的结果 */
     char fname[al];
     int err;
 
@@ -118,7 +119,7 @@
 
 %token MAINSYM INTSYM CHARSYM NUM NEQ EQL LEQ GEQ XORSYM REPEATSYM BOOLSYM
 %token ANDSYM ORSYM NOTSYM SELFMIUNS SELFADD FORSYM CONTINUESYM BREAKSYM
-%token DIM2
+%token DIM2 
 
 %left '+''-'
 %left '*''/' 
@@ -381,9 +382,11 @@ selfplusminus: var SELFADD ';'
           else if(table[$1].kind == array)
           {
             gen(cpy, 0, 0);
+            gen(tsl, 0, table[$1].arraylen);
             gen(loa, lev - table[$1].level, table[$1].adr);
             gen(lit, 0, 1);
             gen(opr, 0, 2);
+            gen(tss, 0, table[$1].arraylen);
             gen(sta, lev - table[$1].level, table[$1].adr);
           }
         }
@@ -399,9 +402,11 @@ selfplusminus: var SELFADD ';'
           else if(table[$1].kind == array)
           {
             gen(cpy, 0, 0);
+            gen(tsl, 0, table[$1].arraylen);
             gen(loa, lev - table[$1].level, table[$1].adr);
             gen(lit, 0, 1);
             gen(opr, 0, 3);
+            gen(tss, 0, table[$1].arraylen);
             gen(sta, lev - table[$1].level, table[$1].adr);
           }
         }
@@ -416,6 +421,7 @@ assignmentstm: var '=' expression ';'
                     {
                        if (table[$1].kind == array)
                         {
+                          gen(tss, 0, table[$1].arraylen);
                           gen(sta, lev - table[$1].level, table[$1].adr);
                         }
                        else if (table[$1].kind == variable)
@@ -499,7 +505,9 @@ readvar: var
                 if(table[$1].kind == variable) 
                   gen(sto, lev - table[$1].level, table[$1].adr);
                 else
+                  {gen(tss, 0, table[$1].arraylen);
                   gen(sta, lev - table[$1].level, table[$1].adr);
+                }
                }
           ;
 
@@ -553,6 +561,7 @@ writestm: WRITESYM var
                                gen(opr, 0, 15);    
                         }
                         else{
+                            gen(tsl, 0, table[$2].arraylen);
                             gen(loa, lev - table[$2].level, table[$2].adr);
                             if(table[$2].idtype != chartype)
                               gen(opr, 0, 14);
@@ -639,6 +648,7 @@ expression: '+' term
                 }
                 else if(table[$1].kind == array)
                 {
+                  gen(tss, 0, table[$1].arraylen);
                   gen(sta, lev - table[$1].level, table[$1].adr);
                   gen(hod, 0, 0);
                   // gen(loa, lev - table[$1].level, table[$1].adr);
@@ -685,7 +695,9 @@ factor: var
                             else if(table[$1].kind == variable)
                                gen(lod, lev - table[$1].level, table[$1].adr);
                             else if(table[$1].kind == array)
+                               {gen(tsl, 0, table[$1].arraylen);
                                gen(loa, lev - table[$1].level, table[$1].adr);
+                             }
                           }
                     }
                 }   
@@ -706,9 +718,11 @@ factor: var
           else if(table[$1].kind == array)
           {
             gen(cpy, 0, 0);
+            gen(tsl, 0, table[$1].arraylen);
             gen(loa, lev - table[$1].level, table[$1].adr);
             gen(lit, 0, 1);
             gen(opr, 0, 2);
+            gen(tss, 0, table[$1].arraylen);
             gen(sta, lev - table[$1].level, table[$1].adr);
             gen(hod, 0, 0);
           }
@@ -725,9 +739,11 @@ factor: var
           else if(table[$1].kind == array)
           {
             gen(cpy, 0, 0);
+            gen(tsl, 0, table[$1].arraylen);
             gen(loa, lev - table[$1].level, table[$1].adr);
             gen(lit, 0, 1);
             gen(opr, 0, 3);
+            gen(tss, 0, table[$1].arraylen);
             gen(sta, lev - table[$1].level, table[$1].adr);
             gen(hod, 0, 0);
           }
@@ -897,7 +913,7 @@ void listall()
   char name[][5]=
   {
     {"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"int"},{"jmp"},{"jpc"},{"loa"},{"sta"},{"hod"},
-    {"cpy"},{"jpe"},{"ext"},{"cla"}
+    {"cpy"},{"jpe"},{"ext"},{"cla"},{"tss"},{"tsl"}
   };
   if (listswitch)
   {
@@ -952,7 +968,16 @@ if (tableswitch)    /* 输出符号表 */
   }
 
 }
-
+void showstack(int t, int p, int *s)
+{
+  int i;
+  fprintf(fstack, "pcode %2d: |", p);
+  for(i = 1; i <= t; i++)
+    fprintf(fstack, " %2d |", s[i]);
+  for(; t < 80; t++)
+    fprintf(fstack, "%s", " ");
+  fprintf(fstack, "%s", "\n");
+}
 /* 解释程序 */
 void interpret()
 {
@@ -975,7 +1000,8 @@ void interpret()
     {
       case lit: /* 将常量a的值取到栈顶 */
         t = t + 1;
-        s[t] = i.a;       
+        s[t] = i.a;
+        showstack(t, p, s);       
         break;
       case opr: /* 数学、逻辑运算 */
         switch (i.a)
@@ -1072,13 +1098,17 @@ void interpret()
             s[t] = s[t] || s[t + 1];
             break;
         }
+        showstack(t, p, s);
         break;
+
       case lod: /* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
         t = t + 1;
-        s[t] = s[base(i.l,s,b) + i.a];        
+        s[t] = s[base(i.l,s,b) + i.a];
+        showstack(t, p, s);        
         break;
       case sto: /* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
         s[base(i.l, s, b) + i.a] = s[t];
+        showstack(t, p, s);
         t = t - 1;
         break;
       case cal: /* 调用子过程 */
@@ -1087,27 +1117,32 @@ void interpret()
         s[t + 3] = p; /* 将当前指令指针入栈，即保存返回地址 */
         b = t + 1;  /* 改变基地址指针值为新过程的基地址 */
         p = i.a;  /* 跳转 */
+        showstack(t, p, s);
         break;
       case ini: /* 在数据栈中为被调用的过程开辟a个单元的数据区 */
         t = t + i.a;  
+        showstack(t, p, s);
         break;
       case jmp: /* 直接跳转 */
         p = i.a;
+        showstack(t, p, s);
         break;
       case jpc: /* 如果栈顶等于0条件跳转 */
         if (s[t] == 0) 
           p = i.a;
         t = t - 1;
+        showstack(t, p, s);
         break;
       case jpe: /* 如果栈顶等于1条件跳转 */
         if (s[t]) 
           p = i.a;
         t = t - 1;
+        showstack(t, p, s);
         break;
       case loa: /* 专门用于lod数组变量 */
         // printf("lod: s[%d] = %d\n", t, s[base(i.l, s, b) + i.a + s[t]]);
         s[t] = s[base(i.l, s, b) + i.a + s[t]];
-
+        showstack(t, p, s);
         break;
       case sta: /* 专门用于sto数组变量 */
         // int top = s[t - 1];//取出expression(次栈顶)的值
@@ -1118,23 +1153,41 @@ void interpret()
         // printf("%d\n", base(i.l, s, b) + i.a + s[t - 1]);
         s[t - 1] = s[t];
         t = t - 2;
+        showstack(t, p, s);
         break;
 
       case hod:
         t = t + 1;//将上次的值滞留在栈顶
+        showstack(t, p, s);
         break;
       case cpy://将栈顶的值复制一份
         s[t + 1] = s[t];
         t = t + 1;
+        showstack(t, p, s);
         break;
       case ext:
         p = 0;
+        showstack(t, p, s);
         break;
       case cla:
         t -= 2;
         s[t] = s[t] * s[t + 2] + s[t + 1];
+        showstack(t, p, s);
         break;
-
+      case tss:
+        if(s[t - 1] >= i.a)
+          {
+            p = 0;
+            printf("数组越界!\n");
+          }
+        break;
+      case tsl:
+        if(s[t] >= i.a)
+          {
+            p = 0;
+            printf("数组越界!\n");
+          }
+        break;
     }
   } while (p != 0);
   printf("End pl0\n");
@@ -1202,12 +1255,18 @@ int main(void)
       printf("Can't open fresult.txt file!\n");
       exit(1);
     }
+    if ((fstack = fopen("fstack.txt", "w")) == NULL)
+    {
+      printf("Can't open fresult.txt file!\n");
+      exit(1);
+    }
     
     listall();  /* 输出所有代码 */
     fclose(fcode);
     
     interpret();  /* 调用解释执行程序 */          
     fclose(fresult);
+    fclose(fstack);
   }
   else
   {

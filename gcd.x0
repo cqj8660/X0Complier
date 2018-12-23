@@ -1,0 +1,22 @@
+main
+{
+	int x, y, z, r;
+	proc gcd
+	{
+		int f, g;
+		f = x;
+		g = y;
+		while(f != g)
+		{
+			if(f < g)
+				g = g - f;
+			else
+				f = f - g;
+		}
+		z = f;
+	}
+	x = 110;
+	y = 11;
+	call gcd;
+	write z;
+}

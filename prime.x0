@@ -1,0 +1,19 @@
+main
+{
+	const maxn = 100;
+	int a[105];
+	int i, j;
+	for(i = 1; i <= maxn; i = i + 1)
+		a[i] = 1;
+	for(i = 2; i <= maxn; i = i + 1)
+	{
+		if(a[i] == 1)
+			for(j = i * 2; j <= maxn; j = j + i)
+				a[j] = 0;
+	}
+	for(i = 2; i <= maxn; i++)
+		if(a[i])
+			write i;
+}
+	
+

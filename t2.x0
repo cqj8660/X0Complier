@@ -1,0 +1,27 @@
+main
+{
+	/*for语句、continue语句、do-while、repeat-until语句*/
+	int i, j;
+	int a;
+	for(i = 0; i < 30; i++)
+	{
+		if(ODD i)
+			continue;
+		write i;
+	}
+	/*如果是偶数则输出*/
+	j = 0;
+	do{
+		j++;
+		write j;
+	}while(j < 5);
+	/*输出0-5*/
+	a = 10;
+	repeat{
+		write a;
+		a--;
+		if(a == 6)
+			break;
+	}until(a <= 5);
+	/*倒序输出10-5*/
+}

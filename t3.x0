@@ -1,0 +1,14 @@
+main
+{
+	/*扩充到布尔类型数据 支持and or not运算*/
+	bool f, k;
+	f = true;
+	k = false;
+	if(f or k)
+		write 1;
+	if(f and k)
+		write 2;
+	if(not k)
+		write 3;
+}
+	

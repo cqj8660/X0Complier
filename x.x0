@@ -1,26 +1,7 @@
 main{
-int p[10][10];
-int i;
-int j;
-int a;
-int b;
-proc add
-{
-  int x, y;
-  char s;
-  bool r, s;
-  s = 101;
-  r = s = 1;
-  if(r and s)
-  {
-    for(x = 1; x < 10; x++)
-      write x;
-    write -1;
-  }
-}
-  p[0][0] = 1;
-  p[0][0]++;
-  write p[0][0];
-  call add;
+  int a, b;
+  a = b = 1;
+  write a;
+  write b;
 }
 /*若读入两个小于10的数，输出这两个数的乘积，否则，输出>=10的值。*/
