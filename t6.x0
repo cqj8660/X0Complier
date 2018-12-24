@@ -1,1 +1,17 @@
-
+main
+{
+	int a0, b0, c0;
+	proc a
+	{
+		int a1, b1;
+		proc b{
+			int a2, b2;
+			a1 = 1;
+			b0 = 4;
+			c0 =  a1 XOR b0;
+		}
+		call b;
+	}
+	call a;
+	write c0;
+}

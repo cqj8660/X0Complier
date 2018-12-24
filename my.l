@@ -33,7 +33,7 @@ exitsym	       "exit"
 "]["			   {return(DIM2);}
 "++"			   {return SELFADD;}
 "--"			   {return SELFMIUNS;}
-"/*"				{comment(); }
+"/*"			   {comment(); }
 "*"				   return *yytext;
 "/"				   return *yytext;
 "+"				   return *yytext;

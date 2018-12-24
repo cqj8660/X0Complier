@@ -17,7 +17,7 @@ int main(int argc, char * argv[])
 			s[strlen(s) - 1] = 0;
 			printf("%s", s);
 			putchar('\r');			
-			usleep(500000);
+			usleep(1000000);
 			fflush(stdout);
 		}
 		putchar('\r');

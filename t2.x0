@@ -5,6 +5,8 @@ main
 	int a;
 	for(i = 0; i < 30; i++)
 	{
+		if(i == 4)
+			exit;
 		if(ODD i)
 			continue;
 		write i;

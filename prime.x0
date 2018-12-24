@@ -14,6 +14,7 @@ main
 	for(i = 2; i <= maxn; i++)
 		if(a[i])
 			write i;
+	maxn = 10;
 }
 	
 
