@@ -1,4 +1,4 @@
-Qmain
+main
 {
 	int x, y, z, r;
 	proc gcd
